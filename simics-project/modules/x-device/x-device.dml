@@ -31,3 +31,24 @@ connect target_mem_space {
 
 // DML Workshop
 // Add your code HERE!
+bank regs {
+    param register_size = 4; 
+    register reg_buffer_size @ 0x00{
+        field size is (read_only) [63:0];
+    }
+    register reg_data_buffer @ 0x04{
+        field data_buffer is (read_write) [63:0]{
+            param desc="Stores the data to be copied into the reg_buffer.instance_x ";
+        }
+    };
+    register reg_addres @ 0x08{
+        field offset is (read_write) [63:0]{
+            param desc="Stores the reg_buffer.instance_x offset. When this register receives a write it will copy the value to the from the reg_data_buffer.data_buffer to a specific reg_buffer.instance_x, based in the offset value";
+        }
+    }
+    register reg_buffer @ 0x20;
+    register reg_command @ 0x40;
+    register reg_output @ 0x60;
+
+
+}
