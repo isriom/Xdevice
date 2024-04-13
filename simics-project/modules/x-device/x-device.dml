@@ -34,21 +34,45 @@ connect target_mem_space {
 bank regs {
     param register_size = 4; 
     register reg_buffer_size @ 0x00{
-        field size is (read_only) [63:0];
+        field size is (read_only) [0:63];
     }
     register reg_data_buffer @ 0x04{
-        field data_buffer is (read_write) [63:0]{
+        field data_buffer is (read_write) [0:63]{
             param desc="Stores the data to be copied into the reg_buffer.instance_x ";
-        }
+        };
     };
     register reg_addres @ 0x08{
-        field offset is (read_write) [63:0]{
+        field offset is (read_write) [0:63]{
             param desc="Stores the reg_buffer.instance_x offset. When this register receives a write it will copy the value to the from the reg_data_buffer.data_buffer to a specific reg_buffer.instance_x, based in the offset value";
+        };
+    }
+    register reg_buffer @ 0x20 {
+        field instance_0 is (read_only) [0:7];
+        field instance_1 is (read_only) [8:15];
+        field instance_2 is (read_only) [16:23];
+        field instance_3 is (read_only) [24:31];
+    };
+    register reg_command @ 0x40 {
+        field cmd is (read_write) [0:8] {
+            param desc = "When this field receives a value, it will operate the fields from reg_buffer register according to the encoding and should store the result in the reg_output.output field 001: instance_0 +instance_1 010: instance_1 - instance_2"
+        };
+    };
+    register reg_output @ 0x60 {
+        field output is (read_only) [0:63]
+    };
+
+}
+
+operation : {
+    switch(reg_command.cmd){
+        case 001: {
+            reg_output.output : reg_buffer.instance_0 + reg_buffer.instance_1;
+        }
+        case 010: {
+            reg_output.output : reg_buffer.instance_1 - reg_buffer.instance_2;
+        }
+        case 100: {
+            reg_output.output : reg_buffer.instance_2 * reg_buffer.instance_3;
         }
     }
-    register reg_buffer @ 0x20;
-    register reg_command @ 0x40;
-    register reg_output @ 0x60;
-
-
 }
