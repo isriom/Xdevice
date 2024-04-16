@@ -41,8 +41,13 @@ bank regs {
             param documentation="Stores the data to be copied into the reg_buffer.instance_x ";
         }
     }
-    register reg_addres @ 0x10{
-        field x_offset @ [63:0];
+    register reg_address @ 0x10{
+        field x_offset @ [63:0] is (write,read){
+        	method write(uint64 value){
+        		default(value);
+                	mailbox();
+       		}
+       }
     }
     register reg_buffer @ 0x20{
         field instance_0 @ [7:0] is (read_only);
@@ -70,25 +75,36 @@ bank regs {
 
     method operation (){
 
-        switch(reg_command.cmd.get()){
-        case 001: {
-            reg_output.output.set( reg_buffer.instance_0.get() + reg_buffer.instance_1.get());
-        }
-        case 010: {
-            reg_output.output.set(reg_buffer.instance_1.get() - reg_buffer.instance_2.get());
-        }
-        case 100: {
-            reg_output.output.set(reg_buffer.instance_2.get() * reg_buffer.instance_3.get());
-        }
-        default:{
-            log error,1:"trying to make a indefined operation %u",reg_command.cmd.get();
-        }
-
-        }
+    
+    	if(reg_command.cmd.get() == 1){
+    		reg_output.output.set( reg_buffer.instance_0.get() + reg_buffer.instance_1.get());
+    	}else if(reg_command.cmd.get() == 2){
+    		reg_output.output.set( reg_buffer.instance_1.get() - reg_buffer.instance_2.get());
+    	}else if(reg_command.cmd.get() == 4){
+    		reg_output.output.set( reg_buffer.instance_2.get() * reg_buffer.instance_3.get());
+    	}else{
+    		log error,1:"trying to make a indefined operation %u",reg_command.cmd.get();
+    	}
+        
 
     }
 
     method mailbox(){
+    
+    	if(reg_address.x_offset.get() == 0){
+    		reg_buffer.instance_0.set( reg_data_buffer.get_val() );
+    	}else if(reg_address.x_offset.get() == 1){
+    		reg_buffer.instance_1.set( reg_data_buffer.get_val() );
+    	}else if(reg_address.x_offset.get() == 2){
+    		reg_buffer.instance_2.set( reg_data_buffer.get_val() );
+    	}else if(reg_address.x_offset.get() == 3){
+    		reg_buffer.instance_3.set( reg_data_buffer.get_val() );
+    	}else{
+    		log error,1:"trying to make a indefined offset %u",reg_address.x_offset.get();
+    	}
+    	
+    	//reg_buffer.set_val(reg_data_buffer.get_val());
+    	
         
     }
 
