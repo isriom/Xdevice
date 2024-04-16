@@ -62,4 +62,25 @@ bank regs {
     }
 
 
+    method operation (){
+
+        switch(reg_command.cmd){
+        case 001: {
+            reg_output.output.val : reg_buffer.instance_0.val + reg_buffer.instance_1.val;
+        }
+        case 010: {
+            reg_output.output.val : reg_buffer.instance_1.val - reg_buffer.instance_2.val;
+        }
+        case 100: {
+            reg_output.output.val : reg_buffer.instance_2.val * reg_buffer.instance_3.val;
+        }
+
+        }
+
+    }
+
+    method mailbox(){
+        
+    }
+
 }
