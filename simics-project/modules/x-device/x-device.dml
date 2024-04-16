@@ -33,26 +33,32 @@ connect target_mem_space {
 // Add your code HERE!
 bank regs {
     param register_size = 8; 
-    register reg_buffer_size size 4 @ 0x00{
-        field size @ [63:0] is (read_only);
+    register reg_buffer_size @ 0x00{
+        field x_size @ [63:0] is (read_only);
     }
-    register reg_data_buffer size 4 @ 0x04{
+    register reg_data_buffer @ 0x08{
         field data_buffer @ [63:0] {
             param documentation="Stores the data to be copied into the reg_buffer.instance_x ";
         }
     }
-    register reg_addres @ 0x08{
-        field offset @ [63:0];
+    register reg_addres @ 0x10{
+        field x_offset @ [63:0];
     }
     register reg_buffer @ 0x20{
         field instance_0 @ [7:0] is (read_only);
         field instance_1 @ [15:8] is (read_only);
         field instance_2 @ [23:16] is (read_only);
-        field instance_3 @ [32:23] is (read_only);
+        field instance_3 @ [32:24] is (read_only);
     }
     register reg_command @ 0x40{
-        field cmd @ [7:0] {
+        field cmd @ [7:0] is (write,read) {
+            
             param documentation="When this field receives a value, it will operate the fields from reg_buffer register according to the encoding and should store the result in the reg_output.output field 001: instance_0 +instance_1 010: instance_1 - instance_2  100: instance_2 * instance_3 Any other value is Reserved. Illegal programing.";
+            method write(uint64 value){
+                default(value);
+                operation();
+            }
+
         }
     }
     register reg_output @ 0x60{
@@ -64,15 +70,18 @@ bank regs {
 
     method operation (){
 
-        switch(reg_command.cmd){
+        switch(reg_command.cmd.get()){
         case 001: {
-            reg_output.output.val : reg_buffer.instance_0.val + reg_buffer.instance_1.val;
+            reg_output.output.set( reg_buffer.instance_0.get() + reg_buffer.instance_1.get());
         }
         case 010: {
-            reg_output.output.val : reg_buffer.instance_1.val - reg_buffer.instance_2.val;
+            reg_output.output.set(reg_buffer.instance_1.get() - reg_buffer.instance_2.get());
         }
         case 100: {
-            reg_output.output.val : reg_buffer.instance_2.val * reg_buffer.instance_3.val;
+            reg_output.output.set(reg_buffer.instance_2.get() * reg_buffer.instance_3.get());
+        }
+        default:{
+            log error,1:"trying to make a indefined operation %u",reg_command.cmd.get();
         }
 
         }
